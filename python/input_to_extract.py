@@ -136,12 +136,6 @@ def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'same') / w
 
 
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return array[idx]
-
-
 def main():
 	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation"
 	trimstart = 30
