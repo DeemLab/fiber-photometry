@@ -1,6 +1,7 @@
 from tdt import read_block
 import numpy as np
 import os
+import math
 
 
 def extract_name_streams(blockname, tankdir, filename1, filename2, trimstart, trimend):
@@ -28,33 +29,29 @@ def pre_process(GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend
 	for i in range(0, num):
 		file = files[i]
 		fs = data.streams[GCAMP.title()].fs
-		start = trimstart * fs
-		print(start)
-		stop = trimend * fs
-		time = np.arange(start=1, stop=len(data.streams[GCAMP.title()].data), step=1)/data.streams[GCAMP.title()].fs
+		start = int(math.floor(trimstart * fs))
+		stop = int(math.ceil(trimend * fs))
+		time = np.arange(start=1, stop=len(data.streams[GCAMP.title()].data)+1, step=1)/data.streams[GCAMP.title()].fs
 		data_GCAMP = np.array(data.streams[GCAMP.title()].data)
 		data_ISOS = np.array(data.streams[GCAMP.title()].data)
-		#Signal470 = data_GCAMP[find_nearest(data_GCAMP, start):-stop]
-		#Signal405 = data.streams[ISOS.title()].data[start:-stop]
-		#trimtime = time[start:-stop]
-		idf = find_nearest(data_GCAMP, data_GCAMP[len(data_GCAMP) - 1] - stop)
-		array_length = len(data_GCAMP)
-		last_element = data_GCAMP[array_length - 1]
-		print(last_element)
-		print(idf)
+		Signal470 = data_GCAMP[start:-stop]
+		Signal405 = data_ISOS[start:-stop]
+		trimtime = time[start:-stop]
+
 
 def find_nearest(array, value):
-    ''' Find nearest value is an array '''
-    idx = (np.abs(array-value)).argmin()
-    return idx
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
 
 def main():
 	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation"
 	n = 16
 	savedata = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation/Data/test2"
 	savefigs = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation/Figures/test2"
-	trimstart = 20
-	trimend = 20
+	trimstart = 30
+	trimend = 30
 	blockname = ['DMH-3-201108-123527']
 	blockname1 = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
 				  'DMH-3-201110-201611', 'DMH-4-201110-210026', 'DMH-6-201110-214402', 'DMH-7-201110-222751']
