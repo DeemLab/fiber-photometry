@@ -46,14 +46,14 @@ def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimen
 		time = np.arange(start=1, stop=len(data.streams[GCAMP.title()].data)+1, step=1)/data.streams[GCAMP.title()].fs
 		data_GCAMP = np.array(data.streams[GCAMP.title()].data)
 		data_ISOS = np.array(data.streams[ISOS.title()].data)
-		Signal470 = data_GCAMP[start:-stop]
+		Signal465 = data_GCAMP[start:-stop]
 		Signal405 = data_ISOS[start:-stop]
 		trimtime = time[start:-stop]
 
 		# downsample
 		N = fs
-		arr_GCAMP = (np.arange(start = 1, stop = len(Signal470)-N+2, step = N)).astype(int)
-		down_GCAMP = [statistics.mean(Signal470[i:round(i+N-1)]) for i in arr_GCAMP]
+		arr_GCAMP = (np.arange(start = 1, stop = len(Signal465)-N+2, step = N)).astype(int)
+		down_GCAMP = [statistics.mean(Signal465[i:round(i+N-1)]) for i in arr_GCAMP]
 		arr_ISOS = (np.arange(start=1, stop=len(Signal405) - N + 2, step=N)).astype(int)
 		down_ISOS = [statistics.mean(Signal405[i:round(i + N - 1)]) for i in arr_ISOS]
 
