@@ -150,8 +150,7 @@ def main():
 	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation"
 	trimstart = 30
 	trimend = 30
-	blockname = ['DMH-3-201108-123527', 'DMH-4-201108-132008']
-	blockname1 = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
+	blockname = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
 				  'DMH-3-201110-201611', 'DMH-4-201110-210026', 'DMH-6-201110-214402', 'DMH-7-201110-222751']
 	filename1 = ['ZT7-DMH3', 'ZT7-DMH4', 'ZT7-DMH6', 'ZT7-DMH7', 'ZT14-DMH3', 'ZT14-DMH4', 'ZT14-DMH6', 'ZT14-DMH7']
 	filename2 = []
