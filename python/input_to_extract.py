@@ -12,26 +12,36 @@ def extract_name_streams(blockname, tankdir, filename1, filename2, trimstart, tr
 		full_path = os.path.join(tankdir, block)
 		data = read_block(full_path)
 		fields = list(data.streams.keys())
-		if len(fields) < 4 or (len(fields) == 4 and (filename1 is None and filename2 is not None)):
+		if len(fields) < 4:
+			file1 = filename1[idx]
+			file2 = None
 			GCAMP = fields[0]
 			ISOS = fields[1]
 			num = 1;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is not None):
+		elif len(fields) == 4 and (idx > len(filename1) and idx <= len(filename2)):
+			file1 = None
+			file2 = filename2[idx]
+			GCAMP = fields[0]
+			ISOS = fields[1]
+			num = 1;
+		elif len(fields) == 4 and (idx <= len(filename1) and idx <= len(filename2)):
+			file1 = filename1[idx]
+			file2 = filename2[idx]
 			GCAMP = fields[2]
 			ISOS = fields[3]
 			num = 2;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is None):
+		elif len(fields) == 4 and (idx <= len(filename1) and idx > len(filename2)):
+			file1 = filename1
+			file2 = None
 			GCAMP = fields[2]
 			ISOS = fields[3]
 			num = 1;
-		process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend)
+		process(idx, GCAMP, ISOS, num, file1, file2, data, trimstart, trimend)
 
 
-def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend):
-	file1 = filename1[idx]
+def process(idx, GCAMP, ISOS, num, file1, file2, data, trimstart, trimend):
 
 	if num > 1:
-		file2 = filename2[idx]
 		files = [file1, file2]
 	else:
 		files = [file1]
@@ -140,7 +150,8 @@ def main():
 	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation"
 	trimstart = 30
 	trimend = 30
-	blockname = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
+	blockname = ['DMH-3-201108-123527', 'DMH-4-201108-132008']
+	blockname1 = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
 				  'DMH-3-201110-201611', 'DMH-4-201110-210026', 'DMH-6-201110-214402', 'DMH-7-201110-222751']
 	filename1 = ['ZT7-DMH3', 'ZT7-DMH4', 'ZT7-DMH6', 'ZT7-DMH7', 'ZT14-DMH3', 'ZT14-DMH4', 'ZT14-DMH6', 'ZT14-DMH7']
 	filename2 = []
