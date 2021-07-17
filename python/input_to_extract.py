@@ -12,26 +12,36 @@ def extract_name_streams(blockname, tankdir, filename1, filename2, trimstart, tr
 		full_path = os.path.join(tankdir, block)
 		data = read_block(full_path)
 		fields = list(data.streams.keys())
-		if len(fields) < 4 or (len(fields) == 4 and (filename1 is None and filename2 is not None)):
+		if len(fields) < 4:
+			file1 = filename1[idx]
+			file2 = None
 			GCAMP = fields[0]
 			ISOS = fields[1]
 			num = 1;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is not None):
+		elif len(fields) == 4 and (idx > len(filename1) and idx <= len(filename2)):
+			file1 = None
+			file2 = filename2[idx]
+			GCAMP = fields[0]
+			ISOS = fields[1]
+			num = 1;
+		elif len(fields) == 4 and (idx <= len(filename1) and idx <= len(filename2)):
+			file1 = filename1[idx]
+			file2 = filename2[idx]
 			GCAMP = fields[2]
 			ISOS = fields[3]
 			num = 2;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is None):
+		elif len(fields) == 4 and (idx <= len(filename1) and idx > len(filename2)):
+			file1 = filename1
+			file2 = None
 			GCAMP = fields[2]
 			ISOS = fields[3]
 			num = 1;
-		process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend)
+		process(idx, GCAMP, ISOS, num, file1, file2, data, trimstart, trimend)
 
 
-def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend):
-	file1 = filename1[idx]
+def process(idx, GCAMP, ISOS, num, file1, file2, data, trimstart, trimend):
 
 	if num > 1:
-		file2 = filename2[idx]
 		files = [file1, file2]
 	else:
 		files = [file1]
@@ -46,14 +56,14 @@ def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimen
 		time = np.arange(start=1, stop=len(data.streams[GCAMP.title()].data)+1, step=1)/data.streams[GCAMP.title()].fs
 		data_GCAMP = np.array(data.streams[GCAMP.title()].data)
 		data_ISOS = np.array(data.streams[ISOS.title()].data)
-		Signal470 = data_GCAMP[start:-stop]
+		Signal465 = data_GCAMP[start:-stop]
 		Signal405 = data_ISOS[start:-stop]
 		trimtime = time[start:-stop]
 
 		# downsample
 		N = fs
-		arr_GCAMP = (np.arange(start = 1, stop = len(Signal470)-N+2, step = N)).astype(int)
-		down_GCAMP = [statistics.mean(Signal470[i:round(i+N-1)]) for i in arr_GCAMP]
+		arr_GCAMP = (np.arange(start = 1, stop = len(Signal465)-N+2, step = N)).astype(int)
+		down_GCAMP = [statistics.mean(Signal465[i:round(i+N-1)]) for i in arr_GCAMP]
 		arr_ISOS = (np.arange(start=1, stop=len(Signal405) - N + 2, step=N)).astype(int)
 		down_ISOS = [statistics.mean(Signal405[i:round(i + N - 1)]) for i in arr_ISOS]
 
