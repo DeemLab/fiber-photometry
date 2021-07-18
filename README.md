@@ -1,7 +1,7 @@
 # Fiber Photometry Data Processing Scripts
 
-### Python Scripts
-####`input_to_extract.py`
+## Python Scripts
+###`input_to_extract.py`
 
 Usage:
 
