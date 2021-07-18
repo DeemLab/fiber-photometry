@@ -14,20 +14,26 @@ def extract_name_streams(blockname, tankdir, filenames, trimstart, trimend):
 		chars = []
 		GCAMP_list = []
 		ISOS_list = []
+		# identify signal names
 		for field in fields:
 			last_char = field[-1]
 			if last_char not in chars and (last_char == "A" or last_char == "C" or last_char == "E" or last_char == "G"):
-				chars.append(last_char)
-				GCAMP = "_465" + last_char
-				GCAMP_list.append(GCAMP)
-				ISOS = "_405" + last_char
-				ISOS_list.append(ISOS)
+				if ("_470A" in fields):
+					GCAMP = "_470A"
+					ISOS = "_405A"
+					GCAMP_list.append(GCAMP)
+					ISOS_list.append(ISOS)
+				else:
+					chars.append(last_char)
+					GCAMP = "_465" + last_char
+					GCAMP_list.append(GCAMP)
+					ISOS = "_405" + last_char
+					ISOS_list.append(ISOS)
 		process(GCAMP_list, ISOS_list, files, data, trimstart, trimend)
 
 
 def process(GCAMP_list, ISOS_list, files, data, trimstart, trimend):
-	num = len(GCAMP_list)
-	for i in range (0, num):
+	for i in range (0, len(GCAMP_list)):
 		file = files[i]
 		# trim
 		GCAMP = GCAMP_list[i]
@@ -39,16 +45,16 @@ def process(GCAMP_list, ISOS_list, files, data, trimstart, trimend):
 
 		data_GCAMP = np.array(data.streams[GCAMP.title()].data)
 		data_ISOS = np.array(data.streams[ISOS.title()].data)
-		Signal465 = data_GCAMP[start:-stop]
-		Signal405 = data_ISOS[start:-stop]
+		Signal_GCAMP = data_GCAMP[start:-stop]
+		Signal_ISOS = data_ISOS[start:-stop]
 		trimtime = time[start:-stop]
 
 		# downsample
 		N = fs
-		arr_GCAMP = (np.arange(start = 1, stop = len(Signal465) - N + 1, step = N)).astype(int)
-		down_GCAMP = [statistics.mean(Signal465[i:round(i+N-1)]) for i in arr_GCAMP]
-		arr_ISOS = (np.arange(start=1, stop=len(Signal405) - N + 1, step=N)).astype(int)
-		down_ISOS = [statistics.mean(Signal405[i:round(i + N - 1)]) for i in arr_ISOS]
+		arr_GCAMP = (np.arange(start = 1, stop = len(Signal_GCAMP) - N + 1, step = N)).astype(int)
+		down_GCAMP = [statistics.mean(Signal_GCAMP[i:round(i+N-1)]) for i in arr_GCAMP]
+		arr_ISOS = (np.arange(start=1, stop=len(Signal_ISOS) - N + 1, step=N)).astype(int)
+		down_ISOS = [statistics.mean(Signal_ISOS[i:round(i + N - 1)]) for i in arr_ISOS]
 		downtime = trimtime[::round(N)]
 		downt = downtime[:len(down_GCAMP)]
 
@@ -105,7 +111,7 @@ def process(GCAMP_list, ISOS_list, files, data, trimstart, trimend):
 		fig.tight_layout()
 		plt.savefig(str(file) + '.png')
 
-		# plot just dFF
+		# plot just dff
 		fig2 = plt.figure()
 		ax = fig2.add_subplot(211)
 		ax.plot(downt, dFF, linewidth=2, color='green')
@@ -127,9 +133,9 @@ def main():
 	trimstart = 20
 	trimend = 20
 	blockname = ['VMH_Pacap4_67-210716-120928', 'VMH_Pacap4_1345-210716-115350']
-	filenames = {'VMH_Pacap4_67-210716-120928': ['VMH_Pacap4_67_1', 'VMH_Pacap4_67_2', 'VMH_Pacap4_67_3', 'VMH_Pacap4_67_4'],
-				 'VMH_Pacap4_1345-210716-115350': ['VMH_Pacap4_1345_1', 'VMH_Pacap4_1345_2', 'VMH_Pacap4_1345_3', 'VMH_Pacap4_1345_4']
-				 }
+	filenames = {
+		'VMH_Pacap4_67-210716-120928': ['VMH_Pacap4_67_1', 'VMH_Pacap4_67_2', 'VMH_Pacap4_67_3', 'VMH_Pacap4_67_4'],
+		'VMH_Pacap4_1345-210716-115350': ['VMH_Pacap4_1345_1', 'VMH_Pacap4_1345_2', 'VMH_Pacap4_1345_3', 'VMH_Pacap4_1345_4']}
 	extract_name_streams(blockname, tankdir, filenames, trimstart, trimend)
 
 
