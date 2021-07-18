@@ -5,8 +5,8 @@ import os
 import statistics
 
 
-def extract_name_streams(blockname, tankdir, filenames, trimstart, trimend):
-	for block in blockname:
+def extract_name_streams(blocknames, tankdir, filenames, trimstart, trimend):
+	for block in blocknames:
 		full_path = os.path.join(tankdir, block)
 		data = read_block(full_path)
 		fields = list(data.streams.keys())
@@ -132,11 +132,11 @@ def main():
 	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Practice"
 	trimstart = 20
 	trimend = 20
-	blockname = ['VMH_Pacap4_67-210716-120928', 'VMH_Pacap4_1345-210716-115350']
+	blocknames = ['VMH_Pacap4_67-210716-120928', 'VMH_Pacap4_1345-210716-115350']
 	filenames = {
 		'VMH_Pacap4_67-210716-120928': ['VMH_Pacap4_67_1', 'VMH_Pacap4_67_2', 'VMH_Pacap4_67_3', 'VMH_Pacap4_67_4'],
 		'VMH_Pacap4_1345-210716-115350': ['VMH_Pacap4_1345_1', 'VMH_Pacap4_1345_2', 'VMH_Pacap4_1345_3', 'VMH_Pacap4_1345_4']}
-	extract_name_streams(blockname, tankdir, filenames, trimstart, trimend)
+	extract_name_streams(blocknames, tankdir, filenames, trimstart, trimend)
 
 
 if __name__ == "__main__":
