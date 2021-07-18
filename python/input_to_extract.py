@@ -2,44 +2,36 @@ from tdt import read_block
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import bisect as b
 import statistics
 
 
-def extract_name_streams(blockname, tankdir, filename1, filename2, trimstart, trimend):
+def extract_name_streams(blockname, tankdir, filenames, trimstart, trimend):
 	for block in blockname:
-		idx = blockname.index(block)
 		full_path = os.path.join(tankdir, block)
 		data = read_block(full_path)
 		fields = list(data.streams.keys())
-		if len(fields) < 4 or (len(fields) == 4 and (filename1 is None and filename2 is not None)):
-			GCAMP = fields[0]
-			ISOS = fields[1]
-			num = 1;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is not None):
-			GCAMP = fields[2]
-			ISOS = fields[3]
-			num = 2;
-		elif len(fields) == 4 and (filename1 is not None and filename2 is None):
-			GCAMP = fields[2]
-			ISOS = fields[3]
-			num = 1;
-		process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend)
+		files = filenames.get(block)
+		chars = []
+		GCAMP_list = []
+		ISOS_list = []
+		for field in fields:
+			last_char = field[-1]
+			if last_char not in chars and (last_char == "A" or last_char == "C" or last_char == "E" or last_char == "G"):
+				chars.append(last_char)
+				GCAMP = "_465" + last_char
+				GCAMP_list.append(GCAMP)
+				ISOS = "_405" + last_char
+				ISOS_list.append(ISOS)
+		process(GCAMP_list, ISOS_list, files, data, trimstart, trimend)
 
 
-def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimend):
-	file1 = filename1[idx]
-
-	if num > 1:
-		file2 = filename2[idx]
-		files = [file1, file2]
-	else:
-		files = [file1]
-
-	for i in range(0, num):
+def process(GCAMP_list, ISOS_list, files, data, trimstart, trimend):
+	num = len(GCAMP_list)
+	for i in range (0, num):
 		file = files[i]
-
 		# trim
+		GCAMP = GCAMP_list[i]
+		ISOS = ISOS_list[i]
 		fs = data.streams[GCAMP.title()].fs
 		start = trimstart
 		stop = trimend
@@ -47,14 +39,14 @@ def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimen
 
 		data_GCAMP = np.array(data.streams[GCAMP.title()].data)
 		data_ISOS = np.array(data.streams[ISOS.title()].data)
-		Signal470 = data_GCAMP[start:-stop]
+		Signal465 = data_GCAMP[start:-stop]
 		Signal405 = data_ISOS[start:-stop]
 		trimtime = time[start:-stop]
 
 		# downsample
 		N = fs
-		arr_GCAMP = (np.arange(start = 1, stop = len(Signal470) - N + 1, step = N)).astype(int)
-		down_GCAMP = [statistics.mean(Signal470[i:round(i+N-1)]) for i in arr_GCAMP]
+		arr_GCAMP = (np.arange(start = 1, stop = len(Signal465) - N + 1, step = N)).astype(int)
+		down_GCAMP = [statistics.mean(Signal465[i:round(i+N-1)]) for i in arr_GCAMP]
 		arr_ISOS = (np.arange(start=1, stop=len(Signal405) - N + 1, step=N)).astype(int)
 		down_ISOS = [statistics.mean(Signal405[i:round(i + N - 1)]) for i in arr_ISOS]
 		downtime = trimtime[::round(N)]
@@ -72,43 +64,38 @@ def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimen
 		dFF = 100*dF/fit_ISOS
 
 		# plot
-		fig = plt.figure(figsize=(7, 10))
+		fig = plt.figure(figsize=(6,8))
 		ax = fig.add_subplot(411)
 		p1, = ax.plot(time, data.streams[GCAMP.title()].data, linewidth=2,
-					   color='green', label='GCaMP')
+					  color='green', label='GCaMP')
 		p2, = ax.plot(time, data.streams[ISOS.title()].data, linewidth=2,
 					  color='blueviolet', label='Isosbestic')
 		ax.set_xlabel('Time (s)')
 		ax.set_ylabel('mV')
 		ax.set_title('Raw Signals ' + str(file))
-		ax.legend(handles=[p1, p2], loc='lower left')
-		ax.set_xlim([30, time[len(time)-1]])
+		ax.legend(handles=[p1, p2], loc='upper right')
+		ax.set_xlim([start, time[len(time)-1]-stop])
 
 		ax2 = fig.add_subplot(412)
-		p3, = ax2.plot(downt, smooth_GCAMP, linewidth=2,
-					  color='green', label='Processed GCaMP')
-		p4, = ax2.plot(downt, smooth_ISOS, linewidth=2,
-					  color='blueviolet', label='Processed Isosbestic')
-		p5, = ax2.plot(downt, fit_ISOS, linewidth=2,
-					   color='blueviolet', label='Fit Isosbestic')
+		p3, = ax2.plot(downt, smooth_GCAMP, linewidth=2, color='green', label='Processed GCaMP')
+		p4, = ax2.plot(downt, smooth_ISOS, linewidth=2, color='blueviolet', label='Processed Isosbestic')
+		p5, = ax2.plot(downt, fit_ISOS, linewidth=2, color='dodgerblue', label='Fit Isosbestic')
 		ax2.set_xlabel('Time (s)')
 		ax2.set_ylabel('mV')
 		ax2.set_title('Smoothed, Fit, and Aligned Signals ' + str(file))
-		ax2.legend(handles=[p3, p4, p5], loc='lower left')
+		ax2.legend(handles=[p3, p4, p5], loc='upper right')
 		ax2.set_xlim([start, len(downt)-stop])
 
 		ax3 = fig.add_subplot(413)
-		p6, = ax3.plot(downt, dF, linewidth=2,
-					   color='black', label='Baseline Corrected GCaMP')
+		p6, = ax3.plot(downt, dF, linewidth=2, color='black', label='Baseline Corrected GCaMP')
 		ax3.set_xlabel('Time (s)')
 		ax3.set_ylabel(r'$\Delta$mV')
 		ax3.set_title('Subtracted Signal ' + str(file))
-		ax3.legend(handles=[p6], loc='lower left')
+		ax3.legend(handles=[p6], loc='upper right')
 		ax3.set_xlim([start, len(downt)-stop])
 
 		ax4 = fig.add_subplot(414)
-		ax4.plot(downt, dFF, linewidth=2,
-					   color='green')
+		ax4.plot(downt, dFF, linewidth=2, color='green')
 		ax4.set_xlabel('Time (s)')
 		ax4.set_ylabel(r'$\Delta$F/F (%)')
 		ax4.set_title(r'$\Delta$F/F, ' + str(file))
@@ -119,10 +106,9 @@ def process(idx, GCAMP, ISOS, num, filename1, filename2, data, trimstart, trimen
 		plt.savefig(str(file) + '.png')
 
 		# plot just dFF
-		fig2 = plt.figure(figsize=(20, 12))
+		fig2 = plt.figure()
 		ax = fig2.add_subplot(211)
-		ax.plot(downt, dFF, linewidth=2,
-					   color='green')
+		ax.plot(downt, dFF, linewidth=2, color='green')
 		ax.set_xlabel('Time (s)')
 		ax.set_ylabel(r'$\Delta$F/F (%)')
 		ax.set_title(r'$\Delta$F/F, ' + str(file))
@@ -137,14 +123,14 @@ def moving_average(x, w):
 
 
 def main():
-	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Faber DMH Project/Circadian HFHS Presentation"
+	tankdir = "/Volumes/GoogleDrive/Shared drives/Schwartz/Data/Fiber Photometry Experiments/Practice"
 	trimstart = 20
 	trimend = 20
-	blockname = ['DMH-3-201108-123527', 'DMH-4-201108-132008', 'DMH-6-201108-140804', 'DMH-7-201108-153449',
-				  'DMH-3-201110-201611', 'DMH-4-201110-210026', 'DMH-6-201110-214402', 'DMH-7-201110-222751']
-	filename1 = ['ZT7-DMH3', 'ZT7-DMH4', 'ZT7-DMH6', 'ZT7-DMH7', 'ZT14-DMH3', 'ZT14-DMH4', 'ZT14-DMH6', 'ZT14-DMH7']
-	filename2 = []
-	extract_name_streams(blockname, tankdir, filename1, filename2, trimstart, trimend)
+	blockname = ['VMH_Pacap4_67-210716-120928', 'VMH_Pacap4_1345-210716-115350']
+	filenames = {'VMH_Pacap4_67-210716-120928': ['VMH_Pacap4_67_1', 'VMH_Pacap4_67_2', 'VMH_Pacap4_67_3', 'VMH_Pacap4_67_4'],
+				 'VMH_Pacap4_1345-210716-115350': ['VMH_Pacap4_1345_1', 'VMH_Pacap4_1345_2', 'VMH_Pacap4_1345_3', 'VMH_Pacap4_1345_4']
+				 }
+	extract_name_streams(blockname, tankdir, filenames, trimstart, trimend)
 
 
 if __name__ == "__main__":
